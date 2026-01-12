@@ -1,0 +1,112 @@
+<div class="min-h-screen bg-[#f3eee9]">
+
+  <main class="mx-auto max-w-[1100px] p-6 pb-10">
+    @if (loading) {
+      <div class="py-10 text-center text-sm opacity-70">Загрузка...</div>
+    } @else {
+      <section class="mb-8">
+  <div class="mb-3 inline-block rounded-md bg-[#c6b0e6] px-4 py-2 text-sm tracking-[0.35em]">
+    Топ недели
+  </div>
+
+  <div class="relative">
+<button
+  type="button"
+  class="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 z-10
+         h-10 w-10 items-center justify-center rounded-full bg-white
+         shadow hover:scale-105 transition"
+  (click)="scrollTopWeek(-1)"
+>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+</svg>
+
+    </button>
+<button
+  type="button"
+  class="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 z-10
+         h-10 w-10 items-center justify-center rounded-full bg-white
+         shadow hover:scale-105 transition"
+  (click)="scrollTopWeek(1)"
+>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+</svg>
+
+    </button>
+<div
+  #topWeekStrip
+  class="overflow-x-auto overflow-y-hidden scroll-smooth pb-2
+         [-ms-overflow-style:none] [scrollbar-width:none]
+         [&::-webkit-scrollbar]:hidden"
+>
+  <div class="flex w-max gap-6">
+    @for (b of sections.topWeek; track b.id) {
+      <div class="w-[170px] shrink-0">
+        <app-book-card
+          [book]="b"
+          (open)="openBook($event)"
+          (add)="openStatusModal($event)"
+        ></app-book-card>
+      </div>
+    }
+  </div>
+</div>
+
+
+
+  </div>
+</section>
+
+      <section>
+        <div class="mb-3 inline-block rounded-md bg-[#c6b0e6] px-4 py-2 text-sm tracking-[0.35em]">
+          Подборка для вас
+        </div>
+
+<div class="grid justify-center grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
+  @for (b of sections.forYou; track b.id) {
+    <div class="w-[170px]">
+      <app-book-card
+        [book]="b"
+        (open)="openBook($event)"
+        (add)="openStatusModal($event)"
+      ></app-book-card>
+    </div>
+  }
+</div>
+
+
+      </section>
+    }
+  </main>
+  @if (statusModalOpen && statusBook) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="w-full max-w-[360px] rounded-2xl bg-white p-4 shadow-xl">
+      <div class="text-sm font-semibold">Добавить книгу</div>
+      <div class="mt-1 text-xs opacity-70">
+        {{ statusBook.title }}
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 gap-2">
+        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('planned')">
+          Хочу прочитать
+        </button>
+        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('reading')">
+          Читаю
+        </button>
+        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('finished')">
+          Прочитано
+        </button>
+        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('dropped')">
+          Бросил(а)
+        </button>
+      </div>
+
+      <button class="mt-3 w-full rounded-xl border border-black/10 py-2 text-sm" (click)="closeStatusModal()">
+        Отмена
+      </button>
+    </div>
+  </div>
+}
+
+</div>

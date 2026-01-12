@@ -1,0 +1,64 @@
+<header class="mx-auto flex max-w-[1100px] items-center gap-6 px-6 py-6">
+<div class="flex items-center gap-3">
+  <a href="/" class="flex items-center gap-3">
+    <img src="icons/logo.svg" alt="BookPulse" class="h-10 w-auto" />
+    <img src="icons/textLogo.svg" alt="BookPulse" class="h-5 w-auto" />
+  </a>
+</div>
+
+  <div class="ml-auto flex flex-1 items-center gap-4">
+    <div class="relative w-full max-w-[520px]">
+      <input
+        class="w-full rounded-xl border border-[#f39a6d]/60 bg-white px-4 py-2 pr-10 text-sm outline-none"
+        placeholder="Поиск"
+        [(ngModel)]="query"
+        (keydown.enter)="onSearch()"
+      />
+      <button
+        type="button"
+        class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm opacity-70 hover:opacity-100"
+        (click)="onSearch()"
+      >
+        🔍
+      </button>
+    </div>
+    <button type="button" class="rounded-xl px-3 py-2 hover:bg-black/5" (click)="onMyBooksClick()">
+      <img src="icons/books.svg" class="h-10 w-10" />
+    </button>
+    <div class="relative" data-user-menu-root>
+      <button
+        type="button"
+        class="rounded-full p-1 hover:bg-black/5"
+        (click)="onAvatarClick()"
+        aria-label="Пользователь"
+      >
+        <img src="icons/avatar.svg" class="h-10 w-10" />
+      </button>
+      @if (menuOpen()) {
+        <div class="absolute right-0 mt-3 w-[280px] rounded-xl bg-white shadow-lg overflow-hidden z-10">
+          <div class="flex items-center gap-3 p-4 border-b border-black/10">
+            <div class="h-10 w-10 rounded-full bg-[#fdb892] flex items-center justify-center font-semibold">
+              {{ initials() || 'U' }}
+            </div>
+            <div class="leading-tight">
+              <div class="text-sm font-semibold">{{ user()?.name }}</div>
+              <div class="text-xs opacity-60">{{ user()?.email }}</div>
+            </div>
+          </div>
+          <button type="button" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5"
+                  (click)="go('/my-books')">
+            <span><img src="icons/books.svg" class="h-5 w-5" /></span> <span class="text-sm">Мои книги</span>
+          </button>
+          <button type="button" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5"
+                  (click)="go('/profile')">
+            <span>👤</span> <span class="text-sm">Профиль</span>
+          </button>
+          <button type="button" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5"
+                  (click)="logout()">
+            <span>🚪</span> <span class="text-sm">Выход</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
