@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
@@ -13,7 +13,7 @@ import {AuthService} from '../../core/auth/auth.service';
 })
 export class Reg {
     submitting = false;
-    serverError = '';
+    serverError = signal('');
     private fb = inject(FormBuilder);
     form = this.fb.group({
         email: ['', [Validators.required, Validators.email]],
@@ -24,8 +24,13 @@ export class Reg {
     private router = inject(Router);
     private auth = inject(AuthService);
 
+    getFormError(controlName: string, errorName?: string) {
+        const control = this.form.get(controlName);
+        return control?.touched && (errorName ? control?.hasError(errorName) : control?.invalid);
+    }
+
     submit() {
-        this.serverError = '';
+        this.serverError.set('');
 
         if (this.form.invalid) {
             this.form.markAllAsTouched();
@@ -53,13 +58,17 @@ export class Reg {
             },
             error: (e) => {
                 this.submitting = false;
+                const msg = ((e) => {
+                    switch (e) {
+                        case 'email already exists':
+                            return 'Пользователь с такой почтой уже существует';
+                        default:
+                            return 'Ошибка регистрации';
+                    }
+                })(e.error.trim());
 
-                const msg =
-                    (typeof e?.error === 'string' && e.error) ||
-                    e?.error?.message ||
-                    'Ошибка регистрации';
+                this.serverError.set(msg);
 
-                this.serverError = msg;
                 console.error('register error', e);
             },
         });

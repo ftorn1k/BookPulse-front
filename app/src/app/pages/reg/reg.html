@@ -12,9 +12,11 @@
                     placeholder="Почта"
                     type="email"
             />
-            @if (form.get('email')?.touched && form.get('email')?.invalid) {
+
+            @if (getFormError('email')) {
                 <p class="text-[11px] text-red-600">Введите корректную почту</p>
             }
+
             <input
                     autocomplete="new-password"
                     class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
@@ -22,7 +24,8 @@
                     placeholder="Пароль"
                     type="password"
             />
-            @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
+
+            @if (getFormError('password', 'minlength')) {
                 <p class="text-[11px] text-red-600">Пароль минимум 6 символов</p>
             }
 
@@ -33,21 +36,28 @@
                     placeholder="Подтверждение пароля"
                     type="password"
             />
-            @if (form.get('passwordConfirm')?.hasError('mismatch')) {
-                <p class="text-[11px] text-red-600 text-center mt-1">Пароли не совпадают </p>
+            
+            @if (getFormError('passwordConfirm', 'mismatch')) {
+                <p class="text-[11px] text-red-600 text-center mt-1">Пароли не совпадают</p>
             }
+
             <label class="terms">
                 <input class="checkbox" formControlName="acceptTerms" type="checkbox"/>
                 <span class="termsText px-2">Я принимаю пользовательское соглашение</span>
             </label>
+            
+            @if (getFormError('acceptTerms', 'required')) {
+                <p class="text-[11px] text-red-600 text-center mt-1">Вы должны принять пользовательское соглашение</p>
+            }
+
             <button
                     [disabled]="submitting"
                     class="mt-2 h-[28px] rounded bg-[#f6b08f] text-[11px] text-neutral-800 hover:opacity-90 disabled:opacity-60"
                     type="submit">
                 Войти
             </button>
-            @if (serverError) {
-                <p class="text-[11px] text-red-600 text-center mt-2">{{ serverError }}</p>
+            @if (serverError()) {
+                <p class="text-[11px] text-red-600 text-center mt-2">{{ serverError() }}</p>
             }
             <a
                     class="mt-2 text-[11px] text-neutral-700 underline underline-offset-4 hover:opacity-80 text-center"
