@@ -36,7 +36,7 @@
                     placeholder="Подтверждение пароля"
                     type="password"
             />
-            
+
             @if (getFormError('passwordConfirm', 'mismatch')) {
                 <p class="text-[11px] text-red-600 text-center mt-1">Пароли не совпадают</p>
             }
@@ -45,7 +45,7 @@
                 <input class="checkbox" formControlName="acceptTerms" type="checkbox"/>
                 <span class="termsText px-2">Я принимаю пользовательское соглашение</span>
             </label>
-            
+
             @if (getFormError('acceptTerms', 'required')) {
                 <p class="text-[11px] text-red-600 text-center mt-1">Вы должны принять пользовательское соглашение</p>
             }
