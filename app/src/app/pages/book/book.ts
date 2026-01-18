@@ -1,25 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BookCard } from '../../shared/components/book-card/book-card';
 import { AuthService, MeUser } from '../../core/auth/auth.service';
-import { computed } from '@angular/core';
-
-
-
-type CollectionDto = { id: number; name: string; count: number };
-type UiBook = { id: string; title: string; author: string; coverUrl: string; rating?: number };
-
-type BookDetails = {
-  description?: string;
-  genres?: string[];
-  publishedYear?: number;
-  pages?: number;
-  age?: string;
-  myRating?: number;
-  reviews?: Array<{ id: string; userName: string; createdAt: string; rating?: number; text: string }>;
-};
+import { CollectionDto, GoogleBookDTO } from '../../core/types';
+import { ApiService } from '../../core/api';
+import { catchError, firstValueFrom, of } from 'rxjs';
 
 @Component({
   selector: 'app-book-page',
@@ -28,61 +14,34 @@ type BookDetails = {
   templateUrl: './book.html',
 })
 export class Book implements OnInit {
-  private http = inject(HttpClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  leftCard: UiBook = { id: '', title: '', author: '', coverUrl: '', rating: 0 };
-  book: BookDetails = { myRating: 0, reviews: [] };
-
-hoveredStar = 0;
- private auth = inject(AuthService);
-
+  book?: GoogleBookDTO;
+  myRating = 0;
+  hoveredStar = 0;
   user = signal<MeUser | null>(null);
-
-  initials = computed(() => {
-    const u = this.user();
-    if (!u?.name) return 'U';
-    return u.name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(x => x[0]?.toUpperCase())
-      .join('');
-  });
-
-  constructor() {
-
-    this.auth.loadMe().subscribe((u) => this.user.set(u));
-  }
-setMyRating(s: number) {
-
-  const val = Math.max(1, Math.min(5, s));
-  this.book.myRating = val;
-}
-
 
   addToCollectionOpen = signal(false);
   collectionsList = signal<CollectionDto[]>([]);
   addToCollectionError = signal('');
 
-
   reviewText = signal('');
   reviewError = signal('');
   sendingReview = signal(false);
+  bookRating = signal(0)
+  constructor(private api: ApiService, private auth: AuthService) {
+    this.auth.loadMe().subscribe((u) => this.user.set(u));
+  }
+setMyRating(s: number) {
 
+  const val = Math.max(1, Math.min(5, s));
+  this.myRating = val;
+}
   openAddToCollection() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigateByUrl('/auth');
-      return;
-    }
-
     this.addToCollectionError.set('');
     this.addToCollectionOpen.set(true);
 
-    this.http.get<CollectionDto[]>('/api/me/collections', {
-      headers: { Authorization: `Bearer ${token}` },
-    }).subscribe({
+    this.api.myCollections.subscribe({
       next: (list) => this.collectionsList.set(list ?? []),
       error: () => this.collectionsList.set([]),
     });
@@ -92,47 +51,17 @@ setMyRating(s: number) {
     this.addToCollectionOpen.set(false);
   }
 
-  private ensureInLibrary(status: 'planned'|'reading'|'finished'|'dropped' = 'planned') {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigateByUrl('/auth');
-      return;
-    }
-
-    return this.http.post(
-      '/api/me/books',
-      {
-        googleId: this.leftCard.id,
-        title: this.leftCard.title,
-        author: this.leftCard.author ?? '',
-        coverUrl: this.leftCard.coverUrl ?? '',
-        pageCount: this.book.pages ?? 0,
-        categories: this.book.genres ?? [],
-        description: this.book.description ?? '',
-        publishedYear: this.book.publishedYear ?? 0,
-        maturity: this.book.age === '18+' ? 'MATURE' : 'NOT_MATURE',
-        status,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-  }
-
-  addCurrentBookToCollection(collectionId: number) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigateByUrl('/auth');
-      return;
-    }
-
+  async addCurrentBookToCollection(collectionId: number) {
+    if(!this.book) return;
     this.addToCollectionError.set('');
-
-    this.ensureInLibrary('planned')?.subscribe({
-      next: () => {
-        this.http.post(
-          '/api/me/collections/add-books',
-          { collectionId, googleIds: [this.leftCard.id] },
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).subscribe({
+    let bookInfo = await firstValueFrom(this.api.getBookInfo(this.book.id).pipe(
+  catchError(() => of(null))
+)) 
+if(!bookInfo){
+  this.addToCollectionError.set('Не удалось добавить книгу в библиотеку')
+  return;
+}
+ this.api.addBookToCollection(collectionId, this.book?.id?? "").subscribe({
           next: () => this.closeAddToCollection(),
           error: (e) => {
             this.addToCollectionError.set(
@@ -142,20 +71,11 @@ setMyRating(s: number) {
             );
           }
         });
-      },
-      error: (e) => {
-        this.addToCollectionError.set(
-          (typeof e?.error === 'string' && e.error) ||
-          e?.error?.message ||
-          'Не удалось добавить книгу в библиотеку'
-        );
-      }
-    });
   }
   reviews = signal<Array<{ id: string; userName: string; createdAt: string; rating?: number; text: string }>>([]);
 
 loadReviews(googleId: string) {
-  this.http.get<any[]>(`/api/books/reviews/${encodeURIComponent(googleId)}`).subscribe({
+  this.api.loadReviews(googleId).subscribe({
     next: (list) => {
       this.reviews.set((list ?? []).map(r => ({
   id: String(r.id),
@@ -167,120 +87,79 @@ loadReviews(googleId: string) {
 
     },
     error: () => {
-      this.book.reviews = [];
+      this.reviews.set([])
     }
   });
 }
 
-  myInitials() {
-    return 'OP';
-  }
-
-  initialsFromName(name: string) {
-    if (!name) return 'U';
-    return name.trim().split(/\s+/).slice(0,2).map(x => x[0]?.toUpperCase()).join('');
-  }
 openBook(b: { id: string }) {
   this.router.navigate(['/book', b.id]);
 }
 loading = signal(true);
 
-ngOnInit() {
-  const id = this.route.snapshot.paramMap.get('id');
-  
-  if (!id) {
-    this.router.navigateByUrl('/');
-    return;
-  }
+async ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) {
+        await this.router.navigateByUrl('/');
+        return;
+    }
 
-  this.loading.set(true);
-
-  this.http.get<any>(`/api/books/google/${encodeURIComponent(id)}`).subscribe({
-    next: (full) => {
-      this.leftCard = {
-        id: full.id,
-        title: full.title ?? 'Без названия',
-        author: full.author ?? '—',
-        coverUrl: full.coverUrl ?? 'icons/no-cover.svg',
-        rating: full.rating ?? 0,
-      };
-
-      this.book = {
-        description: full.description ?? '',
-        genres: full.categories ?? full.genres ?? [],
-        publishedYear: full.publishedYear ?? null,
-        pages: full.pageCount ?? full.pages ?? null,
-        age: full.ageRating ?? full.age ?? '',
-        myRating: 0,
-        reviews: [],
-      };
-
-this.loadReviews(id);
-      this.loading.set(false);
-    },
-    error: () => {
-      this.loading.set(false);
-      this.router.navigateByUrl('/');
-    },
-  });
+    this.loading.set(true);
+    let bookInfo = await firstValueFrom(this.api.getBookInfo(id).pipe(
+        catchError(() => of(null))
+    ));
+    if (!bookInfo) {
+        await this.router.navigateByUrl('/');
+        return;
+    }
+    this.book = bookInfo;
+    let reviewsList = await firstValueFrom(this.api.loadReviews(id).pipe(
+        catchError(() => of([]))
+    ));
+    this.reviews.set(reviewsList ?? [])
+    
+    let avgRating = 0;
+    if (reviewsList && reviewsList.length > 0) {
+        const total = reviewsList.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+        avgRating = total / reviewsList.length;
+    }
+    this.bookRating.set(avgRating);
+    this.loading.set(false);
 }
 
-statusModalOpen = false;
-statusBook: UiBook | null = null;
 
-openStatusModal(book: UiBook) {
-  this.statusBook = book;
+statusModalOpen = false;
+
+openStatusModal() {
   this.statusModalOpen = true;
 }
 
 closeStatusModal() {
   this.statusModalOpen = false;
-  this.statusBook = null;
 }
-addBookWithStatus(book: UiBook, status: 'planned'|'reading'|'finished'|'dropped') {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    this.router.navigateByUrl('/auto');
-    return;
-  }
+async addBookWithStatus(book: GoogleBookDTO, status: 'planned'|'reading'|'finished'|'dropped') {
 
-  this.http.get<any>(`/api/books/google/${encodeURIComponent(book.id)}`).subscribe({
-    next: (full) => {
-      this.http.post(
-        '/api/me/books',
-        {
-          googleId: full.id,
-          title: full.title,
-          author: full.author ?? '',
-          coverUrl: full.coverUrl ?? '',
-          description: full.description ?? '',
-          categories: full.categories ?? [],
-          publishedYear: full.publishedYear ?? 0,
-          pageCount: full.pageCount ?? 0,
-          maturity: full.maturity ?? 'NOT_MATURE',
-          status,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      ).subscribe({
+let bookInfo = await firstValueFrom(this.api.getBookInfo(book.id).pipe(
+  catchError(() => of(null))
+))
+if(!bookInfo){
+  alert('Не удалось получить детали книги');
+  return;
+} 
+
+this.api.addBook(bookInfo, status).subscribe({
         next: () => {
-          console.log('✅ added');
+          console.log('added');
         },
         error: (e) => {
-          console.error('❌ add error', e);
+          console.error('add error', e);
           alert('Ошибка добавления книги');
         },
       });
-    },
-    error: () => {
-      alert('Не удалось получить детали книги');
-    },
-  });
 }
 
 chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
-  const b = this.statusBook;
+  const b = this.book;
   if (!b) return;
 
   this.closeStatusModal();
@@ -288,15 +167,9 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
 }
 
 
-submitReview() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    this.router.navigateByUrl('/auth');
-    return;
-  }
-
+async submitReview() {
   const text = this.reviewText().trim();
-  const rating = this.book.myRating ?? 0;
+  const rating = this.myRating ?? 0;
 
   if (!rating) {
     this.reviewError.set('Сначала поставь “Мою оценку” (звёзды выше).');
@@ -309,29 +182,20 @@ submitReview() {
 
   const id = this.route.snapshot.paramMap.get('id');
   if (!id) return;
-
+  if(!this.book) return;
   this.reviewError.set('');
   this.sendingReview.set(true);
-
-  this.ensureInLibrary('planned')?.subscribe({
-    next: () => {
-      this.http.post<any>(
-        `/api/books/reviews/${encodeURIComponent(id)}`,
-        { rating, text },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).subscribe({
+  let bookInfo = await firstValueFrom(this.api.getBookInfo(this.book.id).pipe(
+  catchError(() => of(null))
+))
+if(!bookInfo){
+    this.sendingReview.set(false);
+    this.reviewError.set('Не удалось добавить книгу в библиотеку.');
+  return;
+}
+this.api.submitReview(id, rating, text).subscribe({
         next: (saved) => {
-          const mapped = {
-            id: String(saved.id),
-            userName: saved.userName,
-            createdAt: saved.createdAt,
-            rating: saved.rating,
-            text: saved.text,
-          };
-
-
-          this.reviews.update(prev => [mapped, ...prev]);
-
+          this.reviews.update(prev => [saved, ...prev]);
           this.reviewText.set('');
           this.sendingReview.set(false);
         },
@@ -340,13 +204,12 @@ submitReview() {
           this.reviewError.set(e?.error?.message || 'Не удалось отправить отзыв.');
         }
       });
-    },
-    error: (e) => {
-      this.sendingReview.set(false);
-      this.reviewError.set(e?.error?.message || 'Не удалось добавить книгу в библиотеку.');
-    }
-  });
 }
-
-
+displayMatureRating(rating?:string){
+if(!rating) return "—";
+switch(rating){
+  case "NOT_MATURE": return "—";
+  default: return rating;
+}
+}
 }

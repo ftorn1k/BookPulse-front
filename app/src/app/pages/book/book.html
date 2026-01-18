@@ -9,11 +9,14 @@
 
         <div class="lg:sticky lg:top-6">
   <div class="w-[220px]">
-    <app-book-card
-      [book]="leftCard"
+    @if(book){
+      <app-book-card
+      [book]="book"
+      [rating]="bookRating()"
       (open)="openBook($event)"
-      (add)="openStatusModal($event)"
+      (add)="openStatusModal()"
     ></app-book-card>
+    }  
   </div>
 
 
@@ -35,7 +38,7 @@
           <div class="flex items-center gap-2">
             <div class="flex gap-1 text-[20px] text-[#fdb892] leading-none">
               @for (s of [1,2,3,4,5]; track s) {
-                @if ((book.myRating ?? 0) >= s) { ★ } @else { ☆ }
+                @if ((myRating ?? 0) >= s) { ★ } @else { ☆ }
               }
             </div>
             <div class="text-xs opacity-60">используется “Моя оценка”</div>
@@ -115,14 +118,14 @@
             </div>
 
             <div class="space-y-3 text-[14px]">
-              <div>Возраст: {{ book.age ?? '—' }}</div>
-              <div>Дата выхода: {{ book.publishedYear ?? '—' }}</div>
-              <div>Объем: {{ book.pages ?? '—' }} стр.</div>
+              <div>Возраст: {{displayMatureRating(book?.maturity)}}</div>
+              <div>Дата выхода: {{ book?.publishedYear }}</div>
+              <div>Объем: {{ book?.pageCount ?? '—' }} стр.</div>
 
               <div>
                 Жанры:
-                @if (book.genres?.length) {
-                  {{ book.genres!.join('/') }}
+                @if (book?.categories?.length) {
+                  {{ book?.categories!.join('/') }}
                 } @else {
                   —
                 }
@@ -154,7 +157,7 @@
                   (click)="setMyRating(s)"
                   aria-label="Оценка"
                 >
-                  @if ((hoveredStar || (book.myRating ?? 0)) >= s) {
+                  @if ((hoveredStar || (myRating ?? 0)) >= s) {
                     ★
                   } @else {
                     ☆
@@ -176,8 +179,8 @@
             </div>
 
             <div class="p-4">
-              <div class="text-sm font-semibold truncate">{{ leftCard.title }}</div>
-              <div class="mt-1 text-xs opacity-70 truncate">{{ leftCard.author || '—' }}</div>
+              <div class="text-sm font-semibold truncate">{{ book?.title }}</div>
+              <div class="mt-1 text-xs opacity-70 truncate">{{ book?.author || '—' }}</div>
 
               <div class="mt-4 text-xs opacity-70">Выбери коллекцию</div>
 
@@ -208,12 +211,12 @@
 
     }
   </main>
-  @if (statusModalOpen && statusBook) {
+  @if (statusModalOpen && book) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
     <div class="w-full max-w-[360px] rounded-2xl bg-white p-4 shadow-xl">
       <div class="text-sm font-semibold">Добавить книгу</div>
       <div class="mt-1 text-xs opacity-70">
-        {{ statusBook.title }}
+        {{ book.title }}
       </div>
 
       <div class="mt-4 grid grid-cols-1 gap-2">

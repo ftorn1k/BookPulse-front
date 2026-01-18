@@ -1,15 +1,16 @@
-import { Component, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BookCard, UiBook } from '../../shared/components/book-card/book-card';
+import { BookCard } from '../../shared/components/book-card/book-card';
 import { FormsModule } from '@angular/forms';
 import { Router,ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api';
-import { GoogleBookDTO } from '../../core/types';
+import { GoogleBookDTO, ReviewDto } from '../../core/types';
+import { catchError, firstValueFrom, of } from 'rxjs';
 
 
 type HomeSections = {
-  topWeek: UiBook[];
-  forYou: UiBook[];
+  topWeek: GoogleBookDTO[];
+  forYou: GoogleBookDTO[];
 };
 
 @Component({
@@ -18,10 +19,10 @@ type HomeSections = {
   imports: [CommonModule, FormsModule, BookCard],
   templateUrl: './main.html',
 })
-export class Main {
+export class Main implements OnInit{
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  
+  booksRatings = new Map<string, number>();
 @ViewChild('topWeekStrip') topWeekStrip?: ElementRef<HTMLElement>;
   loading = true;
   sections: HomeSections = { topWeek: [], forYou: [] };
@@ -40,8 +41,6 @@ scrollTopWeek(dir: number) {
   
   private route = inject(ActivatedRoute);
   constructor(private api: ApiService) {
-    this.loadTopWeek();
-    this.loadForYou();
      this.route.queryParamMap.subscribe((pm) => {
     const q = (pm.get('q') || '').trim();
     if (q) {
@@ -50,15 +49,11 @@ scrollTopWeek(dir: number) {
     }
   });
   }
-
-  private toUi(items: GoogleBookDTO[]): UiBook[] {
-    return items.map((b) => ({
-      id: b.id,
-      title: b.title || 'Без названия',
-      author: b.author || '—',
-      coverUrl: b.coverUrl || 'icons/no-cover.svg',
-    }));
-  }
+  async ngOnInit(){
+    await this.loadTopWeek();
+    await this.loadForYou();
+    await this.loadBookRatings();
+}
   private byId = new Map<string, GoogleBookDTO>();
   private pending = 0;
 
@@ -77,59 +72,25 @@ private endLoad() {
 }
 
   statusModalOpen = false;
-statusBook: UiBook | null = null;
+selectedBook: GoogleBookDTO | null = null;
 
-openStatusModal(book: UiBook) {
-  this.statusBook = book;
+openStatusModal(book: GoogleBookDTO) {
+  this.selectedBook = book;
   this.statusModalOpen = true;
 }
 
 closeStatusModal() {
   this.statusModalOpen = false;
-  this.statusBook = null;
+  this.selectedBook = null;
 }
 
 chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
-  const b = this.statusBook;
+  const b = this.selectedBook;
   if (!b) return;
 
   this.closeStatusModal();
   this.addBookWithStatus(b, status);
 }
-
-  loadTopWeek() {
-    this.beginLoad();
-    this.api.topWeekBooks.subscribe({
-        next: (items) => {
-          items.forEach((it) => this.byId.set(it.id, it));
-          this.sections.topWeek = this.toUi(items);
-          this.endLoad();
-          this.cdr.detectChanges();
-        },
-        error: (e) => {
-          console.error('topWeek error', e);
-          this.endLoad();
-            this.cdr.detectChanges();
-        },
-      });
-  }
-
-  loadForYou() {
-    this.beginLoad();
-    this.api.forYouBooks.subscribe({
-        next: (items) => {
-          items.forEach((it) => this.byId.set(it.id, it));
-          this.sections.forYou = this.toUi(items);
-          this.endLoad();
-            this.cdr.detectChanges();
-        },
-        error: (e) => {
-          console.error('forYou error', e);
-          this.endLoad();
-            this.cdr.detectChanges();
-        },
-      });
-  }
 
   onSearch() {
     const q = this.query.trim();
@@ -138,7 +99,7 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
     this.api.search(q).subscribe({
         next: (items) => {
           items.forEach((it) => this.byId.set(it.id, it));
-          this.sections.forYou = this.toUi(items);
+          this.sections.forYou = items;
           this.endLoad();
             this.cdr.detectChanges();
         },
@@ -150,28 +111,81 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
       });
   }
 
-openBook(book: UiBook) {
+openBook(book: GoogleBookDTO) {
   this.router.navigate(['/book', book.id]);
 }
 
+async addBookWithStatus(book: GoogleBookDTO, status: 'planned'|'reading'|'finished'|'dropped') {
 
-addBookWithStatus(book: UiBook, status: 'planned'|'reading'|'finished'|'dropped') {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    this.router.navigateByUrl('/auto');
-    return;
-  }
-  let bookInfo: GoogleBookDTO|null = null
-  this.api.getBookInfo(book.id).subscribe({
-    next: (full) => {
-      bookInfo = full
-    },
-    error: (e) => {
-      console.error('details error', e);
-      alert('Не удалось получить детали книги');
-    },
-  });
-  if(bookInfo)
-    this.api.addBook(bookInfo, status)
+let bookInfo = await firstValueFrom(this.api.getBookInfo(book.id).pipe(
+  catchError(() => of(null))
+))
+if(!bookInfo){
+  alert('Не удалось получить детали книги');
+  return;
+} 
+
+this.api.addBook(bookInfo, status).subscribe({
+        next: () => {
+          console.log('added');
+        },
+        error: (e) => {
+          console.error('add error', e);
+          alert('Ошибка добавления книги');
+        },
+      });
 }
+async loadBookRatings() {
+    this.beginLoad();
+    const ids = Array.from(this.byId.keys());
+    if (ids.length === 0) {
+        this.endLoad();
+        return;
+    }
+    for (const id of ids) {
+        try{
+            const reviewsList = await firstValueFrom(this.api.loadReviews(id).pipe(
+                catchError(() => of([]))
+            ));
+            let avgRating = 0;
+            if (reviewsList && reviewsList.length > 0) {
+                const total = reviewsList.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+                avgRating = total / reviewsList.length;
+            }
+            this.booksRatings.set(id, avgRating);
+        }
+        catch (e){
+            this.booksRatings.set(id, 0);
+        } 
+    }
+    this.endLoad();
+    this.cdr.detectChanges();
+}
+
+async loadTopWeek() {
+    this.beginLoad();
+    
+    let books = await firstValueFrom(this.api.topWeekBooks.pipe(
+        catchError(() => of([]))
+    ));
+    books.forEach((it) => this.byId.set(it.id, it));
+    this.sections.topWeek = books;
+    this.endLoad();
+    this.cdr.detectChanges();
+}
+
+async loadForYou() {
+    this.beginLoad();
+    
+    let books = await firstValueFrom(this.api.forYouBooks.pipe(
+        catchError(() => of([]))
+    ));
+    books.forEach((it) => this.byId.set(it.id, it));
+    this.sections.forYou = books;
+    this.endLoad();
+    this.cdr.detectChanges();
+}
+
+
+
 }

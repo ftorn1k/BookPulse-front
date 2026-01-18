@@ -1,8 +1,9 @@
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MyBookDto, CollectionDto } from '../../core/types';
+import { MyBookDto, CollectionDto, GoogleBookDTO } from '../../core/types';
 import { ApiService } from '../../core/api';
+import { catchError, firstValueFrom, of } from 'rxjs';
 
 @Component({
   selector: 'app-my-books-page',
@@ -53,15 +54,6 @@ export class MyBooks implements OnInit{
     this.load();
   }
 
-  private getTokenOrRedirect(): string | null {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.router.navigateByUrl('/auto');
-      return null;
-    }
-    return token;
-  }
-
   load() {
     this.loading.set(true);
     console.log("loading")
@@ -81,8 +73,6 @@ export class MyBooks implements OnInit{
   }
 
   private loadCollections() {
-    const token = this.getTokenOrRedirect();
-    if (!token) return;
 
     this.api.myCollections.subscribe({
         next: (cols) => this.collectionsList.set(cols ?? []),
@@ -130,8 +120,6 @@ export class MyBooks implements OnInit{
   }
 
   createCollection() {
-    const token = this.getTokenOrRedirect();
-    if (!token) return;
 
     const name = this.newCollectionName().trim();
     if (!name) {
@@ -174,24 +162,25 @@ export class MyBooks implements OnInit{
     this.statusMenuBook.set(b);
   }
 
-  changeStatus(b: MyBookDto, status: MyBookDto['status']) {
-    const token = this.getTokenOrRedirect();
-    if (!token) return;
-
-    this.api.changeBookStatus(b.bookId, status).subscribe({
-        next: () => {
-          this.statusMenuBook.set(null);
-          this.load();
-        },
-        error: (e) => {
-          this.statusMenuBook.set(null);
-          alert(
-            (typeof e?.error === 'string' && e.error) ||
-              e?.error?.message ||
-              `Ошибка смены статуса (${e.status})`
-          );
-        },
-      });
+  async changeStatus(b: MyBookDto, status: MyBookDto['status']) {
+    
+  let bookInfo = await firstValueFrom(this.api.getBookInfo(b.googleId).pipe(
+    catchError(() => of(null))
+  ))
+  if(!bookInfo){
+    alert('Не удалось получить детали книги');
+    return;
+  } 
+  
+  this.api.addBook(bookInfo, status).subscribe({
+          next: () => {
+            this.load()
+          },
+          error: (e) => {
+            console.error('add error', e);
+            alert('Ошибка добавления книги');
+          },
+        });
   }
 
   openAddToCollection(b: MyBookDto) {
@@ -208,8 +197,6 @@ export class MyBooks implements OnInit{
   }
 
   addBookToCollection(collectionId: number) {
-    const token = this.getTokenOrRedirect();
-    if (!token) return;
 
     const b = this.addToCollectionBook();
     if (!b) return;

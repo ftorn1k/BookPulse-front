@@ -21,4 +21,5 @@ export type MyBookDto = {
   collections: string[];
 };
 export type CollectionDto = { id: number; name: string; count: number };
+export type ReviewDto = { id: string; userName: string; createdAt: string; rating?: number; text: string };
 

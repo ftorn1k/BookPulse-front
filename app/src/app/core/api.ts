@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { GenreStat, GoogleBookDTO, MonthStat, MyBookDto, CollectionDto } from './types';
+import { GenreStat, GoogleBookDTO, MonthStat, MyBookDto, CollectionDto, ReviewDto } from './types';
 
 @Injectable({
   providedIn: 'root',
@@ -76,7 +76,11 @@ export class ApiService {
   }
 
   loadReviews(googleId: string){
-    return this.http.get<any[]>(`${this.baseUrl}/books/reviews/${encodeURIComponent(googleId)}`)
+    return this.http.get<ReviewDto[]>(`${this.baseUrl}/books/reviews/${encodeURIComponent(googleId)}`)
+  }
+
+  submitReview(id: string, rating: number, text: string){
+    return this.http.post<ReviewDto>(`${this.baseUrl}/books/reviews/${encodeURIComponent(id)}`,{ rating, text })
   }
 
 }

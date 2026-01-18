@@ -1,13 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { GoogleBookDTO } from '../../../core/types';
 
-export type UiBook = {
-  id: string;
-  title: string;
-  author: string;
-  coverUrl: string;
-  rating?: number;
-};
 type CardSize = 'sm' | 'md' | 'lg';
 @Component({
   selector: 'app-book-card',
@@ -16,15 +10,12 @@ type CardSize = 'sm' | 'md' | 'lg';
   templateUrl: './book-card.html',
 })
 export class BookCard {
-  @Input({ required: true }) book!: UiBook;
+  @Input({ required: true }) book!: GoogleBookDTO;
+  @Input() rating?: number | null;
   @Input() size: CardSize = 'md';
-  @Output() open = new EventEmitter<UiBook>();
-  @Output() add = new EventEmitter<UiBook>();
+  @Output() open = new EventEmitter<GoogleBookDTO>();
+  @Output() add = new EventEmitter<GoogleBookDTO>();
   onOpen() {
     this.open.emit(this.book);
-  }
-  onAdd(e: MouseEvent) {
-    e.stopPropagation();
-    this.add.emit(this.book);
   }
 }
