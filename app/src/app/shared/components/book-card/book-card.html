@@ -1,41 +1,41 @@
 <article
-  class="rounded-2xl bg-white p-3 shadow-sm hover:shadow-md transition cursor-pointer select-none"
-  role="link"
-  tabindex="0"
-  (click)="onOpen()"
-  (keydown.enter)="onOpen()"
+        (click)="onOpen()"
+        (keydown.enter)="onOpen()"
+        class="rounded-2xl bg-white p-3 shadow-sm hover:shadow-md transition cursor-pointer select-none"
+        role="link"
+        tabindex="0"
 >
-  <div class="rounded-xl border border-black/10 bg-white p-2">
-    <img
-      [src]="book.coverUrl || 'icons/no-cover.svg'"
-      [alt]="book.title"
-      class="aspect-[2/3] w-full rounded-lg object-cover"
-      loading="lazy"
-    />
-  </div>
-
-  <div class="mt-2 text-[12px] font-semibold leading-tight line-clamp-2">
-    {{ book.title }}
-  </div>
-
-  <div class="mt-0.5 text-[11px] opacity-70 line-clamp-1">
-    {{ book.author || '—' }}
-  </div>
-
-  <div class="mt-2 flex items-center justify-between">
-    <div class="text-[11px] flex items-center gap-1">
-      <span class="opacity-60">Рейтинг:</span>
-      <span class="font-semibold">{{ rating ?? '—' }}</span>
+    <div class="rounded-xl border border-black/10 bg-white p-2">
+        <img
+                [alt]="book.title"
+                [src]="book.coverUrl || 'icons/no-cover.svg'"
+                class="aspect-[2/3] w-full rounded-lg object-cover"
+                loading="lazy"
+        />
     </div>
 
-    <button
-      type="button"
-      class="rounded-full bg-[#fdb892] px-3 py-2 text-[11px] leading-none hover:opacity-90"
-      (click)="$event.stopPropagation(); add.emit(book)"
-      aria-label="Добавить"
-      title="Добавить"
-    >
-      +
-    </button>
-  </div>
+    <div class="mt-2 text-[12px] font-semibold leading-tight line-clamp-2">
+        {{ book.title }}
+    </div>
+ 
+    <div class="mt-0.5 text-[11px] opacity-70 line-clamp-1">
+        {{ book.author || '—' }}
+    </div>
+
+    <div class="mt-2 flex items-center justify-between">
+        <div class="text-[11px] flex items-center gap-1">
+            <span class="opacity-60">Рейтинг:</span>
+            <span class="font-semibold">{{ rating ?? '—' }}</span>
+        </div>
+
+        <button
+                (click)="$event.stopPropagation(); add.emit(book)"
+                aria-label="Добавить"
+                class="rounded-full bg-[#fdb892] px-3 py-2 text-[11px] leading-none hover:opacity-90"
+                title="Добавить"
+                type="button"
+        >
+            +
+        </button>
+    </div>
 </article>

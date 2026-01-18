@@ -1,54 +1,54 @@
 <div class="relative min-h-screen bg-white flex items-center justify-center px-6">
-  <a href="/" class="absolute top-6 left-6 flex items-center">
-    <img src="icons/logoText.svg" alt="BookPulse" class="h-14 w-auto" />
-  </a>
+    <a class="absolute top-6 left-6 flex items-center" href="/">
+        <img alt="BookPulse" class="h-14 w-auto" src="icons/logoText.svg"/>
+    </a>
 
-  <main class="w-[340px] flex flex-col items-center gap-4" aria-label="Авторизация">
-    <h1 class="text-[22px] font-semibold tracking-wide text-center text-neutral-800">
-      Войти
-    </h1>
+    <main aria-label="Авторизация" class="w-[340px] flex flex-col items-center gap-4">
+        <h1 class="text-[22px] font-semibold tracking-wide text-center text-neutral-800">
+            Войти
+        </h1>
+ 
+        <form
+                (ngSubmit)="submit()"
+                [formGroup]="form"
+                class="w-[320px] flex flex-col gap-2.5"
+        >
+            <input
+                    autocomplete="email"
+                    class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
+                    formControlName="email"
+                    placeholder="Почта"
+                    type="email"
+            />
 
-    <form
-      class="w-[320px] flex flex-col gap-2.5"
-      [formGroup]="form"
-      (ngSubmit)="submit()"
-    >
-      <input
-        type="email"
-        placeholder="Почта"
-        formControlName="email"
-        autocomplete="email"
-        class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
-      />
+            <input
+                    autocomplete="current-password"
+                    class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
+                    formControlName="password"
+                    placeholder="Пароль"
+                    type="password"
+            />
 
-      <input
-        type="password"
-        placeholder="Пароль"
-        formControlName="password"
-        autocomplete="current-password"
-        class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
-      />
+            @if (errorText) {
+                <p class="text-[11px] text-red-600 text-center mt-1">
+                    {{ errorText }}
+                </p>
+            }
 
-      @if (errorText) {
-        <p class="text-[11px] text-red-600 text-center mt-1">
-          {{ errorText }}
-        </p>
-      }
+            <button
+                    [disabled]="submitting"
+                    class="mt-2 h-[28px] rounded bg-[#f6b08f] text-[11px] text-neutral-800 hover:opacity-90 disabled:opacity-60"
+                    type="submit"
+            >
+                Войти
+            </button>
 
-      <button
-        type="submit"
-        [disabled]="submitting"
-        class="mt-2 h-[28px] rounded bg-[#f6b08f] text-[11px] text-neutral-800 hover:opacity-90 disabled:opacity-60"
-      >
-        Войти
-      </button>
-
-      <a
-        routerLink="/reg"
-        class="mt-2 text-[11px] text-neutral-700 underline underline-offset-4 hover:opacity-80 text-center"
-      >
-        Нет аккаунта? Тебе сюда
-      </a>
-    </form>
-  </main>
+            <a
+                    class="mt-2 text-[11px] text-neutral-700 underline underline-offset-4 hover:opacity-80 text-center"
+                    routerLink="/reg"
+            >
+                Нет аккаунта? Тебе сюда
+            </a>
+        </form>
+    </main>
 </div>

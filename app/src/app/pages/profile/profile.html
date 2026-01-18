@@ -1,120 +1,124 @@
 <div class="min-h-screen bg-[#f3eee9]">
-  <main class="mx-auto max-w-[1100px] px-6 pb-12 pt-6">
-    <div class="mb-4 inline-flex rounded-md bg-[#b89cd8] px-4 py-2 text-[15px] font-bold text-[#2b1b3a]">
-      Профиль
-    </div>
-
-    <section class="grid grid-cols-[240px_1fr] gap-8">
-      <div class="flex items-start justify-center">
-        
-        <img
-          src="icons/avatar.svg"
-          alt=""
-          class="h-24 w-24 rounded-full border border-black/10 bg-white object-cover"
-        />
+    <main class="mx-auto max-w-[1100px] px-6 pb-12 pt-6">
+        <div class="mb-4 inline-flex rounded-md bg-[#b89cd8] px-4 py-2 text-[15px] font-bold text-[#2b1b3a]">
+            Профиль
         </div>
 
-      <div class="max-w-[520px]">
-        <div class="mb-4">
-          <div class="mb-1 text-xs font-semibold text-black/60">Имя</div>
+        <section class="grid grid-cols-[240px_1fr] gap-8">
+            <div class="flex items-start justify-center">
 
-          <div class="relative">
-            <input
-              class="w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm outline-none focus:border-black/40"
-              [value]="name()"
-              (input)="name.set(($any($event.target).value))"
-              placeholder="Имя"
-            />
-            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">✎</span>
-          </div>
+                <img
+                        alt=""
+                        class="h-24 w-24 rounded-full border border-black/10 bg-white object-cover"
+                        src="icons/avatar.svg"
+                />
+            </div>
+
+            <div class="max-w-[520px]">
+                <div class="mb-4">
+                    <div class="mb-1 text-xs font-semibold text-black/60">Имя</div>
+
+                    <div class="relative">
+                        <input
+                                (input)="name.set(($any($event.target).value))"
+                                [value]="name()"
+                                class="w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm outline-none focus:border-black/40"
+                                placeholder="Имя"
+                        />
+                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">✎</span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="mb-1 text-xs font-semibold text-black/60">Почта</div>
+
+                    <div class="relative">
+                        <input
+                                [value]="email()"
+                                class="w-full cursor-not-allowed rounded-md border border-black/10 bg-black/5 px-3 py-2 text-sm text-black/60"
+                                disabled
+                        />
+                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/20">✎</span>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <div class="mb-1 text-xs font-semibold text-black/60">Пароль</div>
+
+                    <div class="relative">
+                        <input
+                                (input)="password.set(($any($event.target).value))"
+                                [value]="password()"
+                                class="w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm outline-none focus:border-black/40"
+                                placeholder="Новый пароль"
+                                type="password"
+                        />
+                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">✎</span>
+                    </div>
+
+                </div>
+
+                <button
+                        (click)="save()"
+                        [disabled]="saving()"
+                        class="w-full rounded-full bg-[#f3b08b] px-6 py-2 text-sm font-bold text-black shadow-[0_6px_0_rgba(0,0,0,0.12)] transition active:translate-y-[1px] active:shadow-[0_4px_0_rgba(0,0,0,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                        type="button"
+                >
+                    @if (saving()) {
+                        Сохранение...
+                    } @else {
+                        Сохранить
+                    }
+                </button>
+
+                @if (saveError()) {
+                    <div class="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {{ saveError() }}
+                    </div>
+                }
+
+                @if (saveOk()) {
+                    <div class="mt-3 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+                        Сохранено
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="mt-10 mb-4 inline-flex rounded-md bg-[#b89cd8] px-4 py-2 text-[15px] font-bold text-[#2b1b3a]">
+            Статистика
         </div>
-        <div class="mb-4">
-          <div class="mb-1 text-xs font-semibold text-black/60">Почта</div>
 
-          <div class="relative">
-            <input
-              class="w-full cursor-not-allowed rounded-md border border-black/10 bg-black/5 px-3 py-2 text-sm text-black/60"
-              [value]="email()"
-              disabled
-            />
-            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/20">✎</span>
-          </div>
-        </div>
+        <section class="grid grid-cols-2 gap-8">
+            <div class="rounded-3xl bg-white p-6 shadow">
+                <div class="text-sm font-semibold">Жанры прочитанных книг</div>
 
-        <div class="mb-5">
-          <div class="mb-1 text-xs font-semibold text-black/60">Пароль</div>
+                <div class="mt-4 h-[360px] w-full pb-6">
+                    <canvas
+                            [data]="pieData()"
+                            [options]="pieOptions"
+                            [type]="'pie'"
+                            baseChart
+                    ></canvas>
+                </div>
+            </div>
 
-          <div class="relative">
-            <input
-              type="password"
-              class="w-full rounded-md border border-black/20 bg-white px-3 py-2 text-sm outline-none focus:border-black/40"
-              [value]="password()"
-              (input)="password.set(($any($event.target).value))"
-              placeholder="Новый пароль"
-            />
-            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-black/40">✎</span>
-          </div>
+            <div class="rounded-2xl bg-white p-5 shadow-[0_10px_20px_rgba(0,0,0,0.08)]">
+                <div class="mb-3 text-sm font-bold text-black/70">Добавленные книги (последние 6 месяцев)</div>
 
-        </div>
+                @if (monthStats().length === 0) {
+                    <div class="py-12 text-center text-sm text-black/50">Пока нет данных</div>
+                } @else {
+                    <div class="h-[280px]">
+                        <canvas
+                                baseChart
+                                [type]="'bar'"
+                                [data]="barData()"
+                                [options]="barOptions"
+                        ></canvas>
+                    </div>
+                }
+            </div>
+        </section>
 
-        <button
-          class="w-full rounded-full bg-[#f3b08b] px-6 py-2 text-sm font-bold text-black shadow-[0_6px_0_rgba(0,0,0,0.12)] transition active:translate-y-[1px] active:shadow-[0_4px_0_rgba(0,0,0,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
-          (click)="save()"
-          [disabled]="saving()"
-          type="button"
-        >
-          @if (saving()) { Сохранение... } @else { Сохранить }
-        </button>
-
-        @if (saveError()) {
-          <div class="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {{ saveError() }}
-          </div>
-        }
-
-        @if (saveOk()) {
-          <div class="mt-3 rounded-md border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
-            Сохранено
-          </div>
-        }
-      </div>
-    </section>
-
-    <div class="mt-10 mb-4 inline-flex rounded-md bg-[#b89cd8] px-4 py-2 text-[15px] font-bold text-[#2b1b3a]">
-      Статистика
-    </div>
-
-    <section class="grid grid-cols-2 gap-8">
-      <div class="rounded-3xl bg-white p-6 shadow">
-  <div class="text-sm font-semibold">Жанры прочитанных книг</div>
-
-  <div class="mt-4 h-[360px] w-full pb-6">
-    <canvas
-      baseChart
-      [type]="'pie'"
-      [data]="pieData()"
-      [options]="pieOptions"
-    ></canvas>
-  </div>
-</div>
-      
-      <div class="rounded-2xl bg-white p-5 shadow-[0_10px_20px_rgba(0,0,0,0.08)]">
-        <div class="mb-3 text-sm font-bold text-black/70">Добавленные книги (последние 6 месяцев)</div>
-
-        @if (monthStats().length === 0) {
-          <div class="py-12 text-center text-sm text-black/50">Пока нет данных</div>
-        } @else {
-          <div class="h-[280px]">
-            <canvas
-              baseChart
-              [type]="'bar'"
-              [data]="barData()"
-              [options]="barOptions"
-            ></canvas>
-          </div>
-        }
-      </div>
-    </section>
-
-  </main>
+    </main>
 </div>

@@ -1,86 +1,60 @@
-<div
-  class="relative min-h-screen bg-white flex items-center justify-center px-6"
->
-  <a
-    href="/"
-    class="absolute top-6 left-6 flex items-center"
-  >
-    <img
-      src="icons/logoText.svg"
-      alt="BookPulse"
-      class="h-14 w-auto"
-    />
-  </a>
-  <main
-    class="w-[340px] flex flex-col items-center gap-4"
-    aria-label="Регистрация"
-  >
-    <h1
-      class="text-[22px] font-semibold tracking-wide text-center text-neutral-800"
-    >
-      Начать пользоваться
-    </h1>
+<div class="relative min-h-screen bg-white flex items-center justify-center px-6">
+    <a class="absolute top-6 left-6 flex items-center" href="/">
+        <img alt="BookPulse" class="h-14 w-auto" src="icons/logoText.svg"/>
+    </a>
+    <main aria-label="Регистрация" class="w-[340px] flex flex-col items-center gap-4">
+        <h1 class="text-[22px] font-semibold tracking-wide text-center text-neutral-800"> Начать пользоваться </h1>
+        <form (ngSubmit)="submit()" [formGroup]="form" class="w-[320px] flex flex-col gap-2.5">
+            <input
+                    autocomplete="email"
+                    class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
+                    formControlName="email"
+                    placeholder="Почта"
+                    type="email"
+            />
+            @if (form.get('email')?.touched && form.get('email')?.invalid) {
+                <p class="text-[11px] text-red-600">Введите корректную почту</p>
+            }
+            <input
+                    autocomplete="new-password"
+                    class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
+                    formControlName="password"
+                    placeholder="Пароль"
+                    type="password"
+            />
+            @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
+                <p class="text-[11px] text-red-600">Пароль минимум 6 символов</p>
+            }
 
-    <form
-      class="w-[320px] flex flex-col gap-2.5"
-      [formGroup]="form"
-      (ngSubmit)="submit()"
-    >
-      <input
-        type="email"
-        placeholder="Почта"
-        formControlName="email"
-        autocomplete="email"
-        class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
-      />
-@if (form.get('email')?.touched && form.get('email')?.invalid) {
-  <p class="text-[11px] text-red-600">Введите корректную почту</p>
-}
-      <input
-        type="password"
-        placeholder="Пароль"
-        formControlName="password"
-        autocomplete="new-password"
-        class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
-      />
-      @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
-  <p class="text-[11px] text-red-600">Пароль минимум 6 символов</p>
-}
-
-      <input
-        type="password"
-        placeholder="Подтверждение пароля"
-        formControlName="passwordConfirm"
-        autocomplete="new-password"
-        class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
-      />
-    @if (form.get('passwordConfirm')?.hasError('mismatch')) {
-  <p class="text-[11px] text-red-600 text-center mt-1">
-    Пароли не совпадают
-  </p>
-    }
-    <label class="terms">
-        <input class="checkbox" type="checkbox" formControlName="acceptTerms" />
-        <span class="termsText px-2">Я принимаю пользовательское соглашение</span>
-      </label>
-       <button
-        type="submit"
-        [disabled]="submitting"
-        class="mt-2 h-[28px] rounded bg-[#f6b08f] text-[11px] text-neutral-800 hover:opacity-90 disabled:opacity-60"
-      >
-        Войти
-      </button>
-      @if (serverError) {
-  <p class="text-[11px] text-red-600 text-center mt-2">
-    {{ serverError }}
-  </p>
-}
-      <a
-        routerLink="/auth"
-        class="mt-2 text-[11px] text-neutral-700 underline underline-offset-4 hover:opacity-80 text-center"
-      >
-        У меня уже есть аккаунт
-      </a>
-    </form>
-  </main>
+            <input
+                    autocomplete="new-password"
+                    class="h-[34px] px-2.5 text-[12px] border border-neutral-300 rounded outline-none focus:border-neutral-400"
+                    formControlName="passwordConfirm"
+                    placeholder="Подтверждение пароля"
+                    type="password"
+            />
+            @if (form.get('passwordConfirm')?.hasError('mismatch')) {
+                <p class="text-[11px] text-red-600 text-center mt-1">Пароли не совпадают </p>
+            }
+            <label class="terms">
+                <input class="checkbox" formControlName="acceptTerms" type="checkbox"/>
+                <span class="termsText px-2">Я принимаю пользовательское соглашение</span>
+            </label>
+            <button
+                    [disabled]="submitting"
+                    class="mt-2 h-[28px] rounded bg-[#f6b08f] text-[11px] text-neutral-800 hover:opacity-90 disabled:opacity-60"
+                    type="submit">
+                Войти
+            </button>
+            @if (serverError) {
+                <p class="text-[11px] text-red-600 text-center mt-2">{{ serverError }}</p>
+            }
+            <a
+                    class="mt-2 text-[11px] text-neutral-700 underline underline-offset-4 hover:opacity-80 text-center"
+                    routerLink="/auth"
+            >
+                У меня уже есть аккаунт
+            </a>
+        </form>
+    </main>
 </div>

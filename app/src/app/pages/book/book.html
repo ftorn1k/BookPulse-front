@@ -1,244 +1,256 @@
 <div class="min-h-screen bg-[#f3eee9]">
-  <main class="mx-auto max-w-[1100px] px-6 pb-12">
-    @if (loading()) {
-      <div class="py-10 text-center text-sm opacity-70">Загрузка...</div>
-    } @else {
+    <main class="mx-auto max-w-[1100px] px-6 pb-12">
+        @if (loading()) {
+            <div class="py-10 text-center text-sm opacity-70">Загрузка...</div>
+        } @else {
 
 
-      <div class="grid gap-10 pt-6 lg:grid-cols-[240px_1fr] lg:items-start">
+            <div class="grid gap-10 pt-6 lg:grid-cols-[240px_1fr] lg:items-start">
 
-        <div class="lg:sticky lg:top-6">
-  <div class="w-[220px]">
-    @if(book){
-      <app-book-card
-      [book]="book"
-      [rating]="bookRating()"
-      (open)="openBook($event)"
-      (add)="openStatusModal()"
-    ></app-book-card>
-    }  
-  </div>
-
-
-  <section class="mt-6 w-[520px]">
-    <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
-      Отзывы
-    </div>
+                <div class="lg:sticky lg:top-6">
+                    <div class="w-[220px]">
+                        @if (book) {
+                            <app-book-card
+                                    [book]="book"
+                                    [rating]="bookRating()"
+                                    (open)="openBook($event)"
+                                    (add)="openStatusModal()"
+                            ></app-book-card>
+                        }
+                    </div>
 
 
-    <div class="max-w-[760px] rounded-2xl bg-white p-4 shadow-sm">
-      <div class="flex items-start gap-4">
-        <img
-          src="icons/avatar.svg"
-          alt=""
-          class="h-10 w-10 rounded-full border border-black/10 bg-white object-cover"
-        />
-
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <div class="flex gap-1 text-[20px] text-[#fdb892] leading-none">
-              @for (s of [1,2,3,4,5]; track s) {
-                @if ((myRating ?? 0) >= s) { ★ } @else { ☆ }
-              }
-            </div>
-            <div class="text-xs opacity-60">используется “Моя оценка”</div>
-          </div>
-
-          <textarea
-            class="mt-3 w-full rounded-xl border border-black/10 px-3 py-2 text-sm outline-none min-h-[96px]"
-            placeholder="Напиши отзыв..."
-            [value]="reviewText()"
-            (input)="reviewText.set(($any($event.target)).value)"
-          ></textarea>
-
-          @if (reviewError()) {
-            <div class="mt-2 text-xs text-red-600">{{ reviewError() }}</div>
-          }
-
-          <div class="mt-3 flex justify-end">
-            <button
-              type="button"
-              class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm font-semibold hover:opacity-95 disabled:opacity-60"
-              [disabled]="sendingReview()"
-              (click)="submitReview()"
-            >
-              Отправить
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+                    <section class="mt-6 w-[520px]">
+                        <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
+                            Отзывы
+                        </div>
 
 
-    @if (reviews().length) {
-      <div class="mt-6 space-y-4 max-w-[760px]">
-        @for (r of reviews(); track r.id) {
-          <div class="rounded-2xl bg-white p-4 shadow-sm">
-            <div class="flex items-start gap-4">
-              <img
-                src="icons/avatar.svg"
-                alt=""
-                class="h-10 w-10 rounded-full border border-black/10 bg-white object-cover"
-              />
+                        <div class="max-w-[760px] rounded-2xl bg-white p-4 shadow-sm">
+                            <div class="flex items-start gap-4">
+                                <img
+                                        src="icons/avatar.svg"
+                                        alt=""
+                                        class="h-10 w-10 rounded-full border border-black/10 bg-white object-cover"
+                                />
 
-              <div class="flex-1">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <div class="text-sm font-semibold truncate">{{ r.userName }}</div>
-                    <div class="text-xs opacity-60 shrink-0">{{ r.createdAt }}</div>
-                  </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex gap-1 text-[20px] text-[#fdb892] leading-none">
+                                            @for (s of [1, 2, 3, 4, 5]; track s) {
+                                                @if ((myRating ?? 0) >= s) {
+                                                    ★
+                                                } @else {
+                                                    ☆
+                                                }
+                                            }
+                                        </div>
+                                        <div class="text-xs opacity-60">используется “Моя оценка”</div>
+                                    </div>
 
-                  <div class="flex gap-1 text-[18px] text-[#fdb892] leading-none shrink-0">
-                    @for (s of [1,2,3,4,5]; track s) {
-                      @if ((r.rating ?? 0) >= s) { ★ } @else { ☆ }
-                    }
-                  </div>
+                                    <textarea
+                                            class="mt-3 w-full rounded-xl border border-black/10 px-3 py-2 text-sm outline-none min-h-[96px]"
+                                            placeholder="Напиши отзыв..."
+                                            [value]="reviewText()"
+                                            (input)="reviewText.set(($any($event.target)).value)"
+                                    ></textarea>
+
+                                    @if (reviewError()) {
+                                        <div class="mt-2 text-xs text-red-600">{{ reviewError() }}</div>
+                                    }
+
+                                    <div class="mt-3 flex justify-end">
+                                        <button
+                                                type="button"
+                                                class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm font-semibold hover:opacity-95 disabled:opacity-60"
+                                                [disabled]="sendingReview()"
+                                                (click)="submitReview()"
+                                        >
+                                            Отправить
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @if (reviews().length) {
+                            <div class="mt-6 space-y-4 max-w-[760px]">
+                                @for (r of reviews(); track r.id) {
+                                    <div class="rounded-2xl bg-white p-4 shadow-sm">
+                                        <div class="flex items-start gap-4">
+                                            <img
+                                                    src="icons/avatar.svg"
+                                                    alt=""
+                                                    class="h-10 w-10 rounded-full border border-black/10 bg-white object-cover"
+                                            />
+
+                                            <div class="flex-1">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex items-center gap-2 min-w-0">
+                                                        <div class="text-sm font-semibold truncate">{{ r.userName }}</div>
+                                                        <div class="text-xs opacity-60 shrink-0">{{ r.createdAt }}</div>
+                                                    </div>
+
+                                                    <div class="flex gap-1 text-[18px] text-[#fdb892] leading-none shrink-0">
+                                                        @for (s of [1, 2, 3, 4, 5]; track s) {
+                                                            @if ((r.rating ?? 0) >= s) {
+                                                                ★
+                                                            } @else {
+                                                                ☆
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-2 text-sm whitespace-pre-line">
+                                                    {{ r.text }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        } @else {
+                            <div class="mt-4 text-sm opacity-70">Пока нет отзывов</div>
+                        }
+                    </section>
                 </div>
 
-                <div class="mt-2 text-sm whitespace-pre-line">
-                  {{ r.text }}
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-    } @else {
-      <div class="mt-4 text-sm opacity-70">Пока нет отзывов</div>
-    }
-  </section>
-</div>
 
+                <div class="max-w-[760px]">
 
-        <div class="max-w-[760px]">
+                    <section class="mb-8">
+                        <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
+                            Информация
+                        </div>
 
-          <section class="mb-8">
-            <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
-              Информация
-            </div>
+                        <div class="space-y-3 text-[14px]">
+                            <div>Возраст: {{ displayMatureRating(book?.maturity) }}</div>
+                            <div>Дата выхода: {{ book?.publishedYear }}</div>
+                            <div>Объем: {{ book?.pageCount ?? '—' }} стр.</div>
 
-            <div class="space-y-3 text-[14px]">
-              <div>Возраст: {{displayMatureRating(book?.maturity)}}</div>
-              <div>Дата выхода: {{ book?.publishedYear }}</div>
-              <div>Объем: {{ book?.pageCount ?? '—' }} стр.</div>
+                            <div>
+                                Жанры:
+                                @if (book?.categories?.length) {
+                                    {{ book?.categories!.join('/') }}
+                                } @else {
+                                    —
+                                }
+                            </div>
+                        </div>
 
-              <div>
-                Жанры:
-                @if (book?.categories?.length) {
-                  {{ book?.categories!.join('/') }}
-                } @else {
-                  —
-                }
-              </div>
-            </div>
-
-            <button
-              type="button"
-              class="mt-6 rounded-full bg-[#fdb892] px-6 py-3 text-[12px] tracking-[0.25em]
+                        <button
+                                type="button"
+                                class="mt-6 rounded-full bg-[#fdb892] px-6 py-3 text-[12px] tracking-[0.25em]
                      shadow-[0_10px_0_rgba(0,0,0,0.08)] hover:opacity-95"
-              (click)="openAddToCollection()"
-            >
-              Добавить в коллекцию
-            </button>
-          </section>
+                                (click)="openAddToCollection()"
+                        >
+                            Добавить в коллекцию
+                        </button>
+                    </section>
 
-          <section class="mb-10">
-            <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
-              Моя оценка
+                    <section class="mb-10">
+                        <div class="mb-4 inline-block rounded-md bg-[#c6b0e6] px-6 py-2 text-sm tracking-[0.35em]">
+                            Моя оценка
+                        </div>
+
+                        <div class="flex gap-2 text-3xl text-[#fdb892]">
+                            @for (s of [1, 2, 3, 4, 5]; track s) {
+                                <button
+                                        type="button"
+                                        class="leading-none transition hover:scale-105"
+                                        (mouseenter)="hoveredStar = s"
+                                        (mouseleave)="hoveredStar = 0"
+                                        (click)="setMyRating(s)"
+                                        aria-label="Оценка"
+                                >
+                                    @if ((hoveredStar || (myRating ?? 0)) >= s) {
+                                        ★
+                                    } @else {
+                                        ☆
+                                    }
+                                </button>
+                            }
+                        </div>
+                    </section>
+                </div>
             </div>
 
-            <div class="flex gap-2 text-3xl text-[#fdb892]">
-              @for (s of [1,2,3,4,5]; track s) {
-                <button
-                  type="button"
-                  class="leading-none transition hover:scale-105"
-                  (mouseenter)="hoveredStar = s"
-                  (mouseleave)="hoveredStar = 0"
-                  (click)="setMyRating(s)"
-                  aria-label="Оценка"
-                >
-                  @if ((hoveredStar || (myRating ?? 0)) >= s) {
-                    ★
-                  } @else {
-                    ☆
-                  }
+
+            @if (addToCollectionOpen()) {
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+                     (click)="closeAddToCollection()">
+                    <div class="w-full max-w-[420px] rounded-2xl bg-white shadow-xl overflow-hidden"
+                         (click)="$event.stopPropagation()">
+                        <div class="flex items-center justify-between border-b border-black/10 p-4">
+                            <div class="text-sm font-semibold">Добавить в коллекцию</div>
+                            <button type="button" class="h-9 w-9 rounded-xl hover:bg-black/5"
+                                    (click)="closeAddToCollection()">✕
+                            </button>
+                        </div>
+
+                        <div class="p-4">
+                            <div class="text-sm font-semibold truncate">{{ book?.title }}</div>
+                            <div class="mt-1 text-xs opacity-70 truncate">{{ book?.author || '—' }}</div>
+
+                            <div class="mt-4 text-xs opacity-70">Выбери коллекцию</div>
+
+                            <div class="mt-2 max-h-[176px] overflow-y-auto rounded-xl border border-black/10">
+                                @for (c of collectionsList(); track c.id) {
+                                    <button
+                                            type="button"
+                                            class="w-full px-4 py-3 text-left text-sm hover:bg-black/5 flex items-center justify-between"
+                                            (click)="addCurrentBookToCollection(c.id)"
+                                    >
+                                        <span class="truncate">{{ c.name }}</span>
+                                        <span class="text-xs opacity-60">{{ c.count }}</span>
+                                    </button>
+                                }
+
+                                @if (collectionsList().length === 0) {
+                                    <div class="px-4 py-3 text-sm opacity-70">Пока нет коллекций</div>
+                                }
+                            </div>
+
+                            @if (addToCollectionError()) {
+                                <div class="mt-3 text-xs text-red-600">{{ addToCollectionError() }}</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+        }
+    </main>
+    @if (statusModalOpen && book) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div class="w-full max-w-[360px] rounded-2xl bg-white p-4 shadow-xl">
+                <div class="text-sm font-semibold">Добавить книгу</div>
+                <div class="mt-1 text-xs opacity-70">
+                    {{ book.title }}
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-2">
+                    <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('planned')">
+                        Хочу прочитать
+                    </button>
+                    <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('reading')">
+                        Читаю
+                    </button>
+                    <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('finished')">
+                        Прочитано
+                    </button>
+                    <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('dropped')">
+                        Бросил(а)
+                    </button>
+                </div>
+
+                <button class="mt-3 w-full rounded-xl border border-black/10 py-2 text-sm" (click)="closeStatusModal()">
+                    Отмена
                 </button>
-              }
             </div>
-          </section>
         </div>
-      </div>
-
-
-      @if (addToCollectionOpen()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" (click)="closeAddToCollection()">
-          <div class="w-full max-w-[420px] rounded-2xl bg-white shadow-xl overflow-hidden" (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between border-b border-black/10 p-4">
-              <div class="text-sm font-semibold">Добавить в коллекцию</div>
-              <button type="button" class="h-9 w-9 rounded-xl hover:bg-black/5" (click)="closeAddToCollection()">✕</button>
-            </div>
-
-            <div class="p-4">
-              <div class="text-sm font-semibold truncate">{{ book?.title }}</div>
-              <div class="mt-1 text-xs opacity-70 truncate">{{ book?.author || '—' }}</div>
-
-              <div class="mt-4 text-xs opacity-70">Выбери коллекцию</div>
-
-              <div class="mt-2 max-h-[176px] overflow-y-auto rounded-xl border border-black/10">
-                @for (c of collectionsList(); track c.id) {
-                  <button
-                    type="button"
-                    class="w-full px-4 py-3 text-left text-sm hover:bg-black/5 flex items-center justify-between"
-                    (click)="addCurrentBookToCollection(c.id)"
-                  >
-                    <span class="truncate">{{ c.name }}</span>
-                    <span class="text-xs opacity-60">{{ c.count }}</span>
-                  </button>
-                }
-
-                @if (collectionsList().length === 0) {
-                  <div class="px-4 py-3 text-sm opacity-70">Пока нет коллекций</div>
-                }
-              </div>
-
-              @if (addToCollectionError()) {
-                <div class="mt-3 text-xs text-red-600">{{ addToCollectionError() }}</div>
-              }
-            </div>
-          </div>
-        </div>
-      }
-
     }
-  </main>
-  @if (statusModalOpen && book) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div class="w-full max-w-[360px] rounded-2xl bg-white p-4 shadow-xl">
-      <div class="text-sm font-semibold">Добавить книгу</div>
-      <div class="mt-1 text-xs opacity-70">
-        {{ book.title }}
-      </div>
-
-      <div class="mt-4 grid grid-cols-1 gap-2">
-        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('planned')">
-          Хочу прочитать
-        </button>
-        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('reading')">
-          Читаю
-        </button>
-        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('finished')">
-          Прочитано
-        </button>
-        <button class="rounded-xl bg-[#fdb892] px-4 py-2 text-sm" (click)="chooseStatus('dropped')">
-          Бросил(а)
-        </button>
-      </div>
-
-      <button class="mt-3 w-full rounded-xl border border-black/10 py-2 text-sm" (click)="closeStatusModal()">
-        Отмена
-      </button>
-    </div>
-  </div>
-}
 
 </div>
