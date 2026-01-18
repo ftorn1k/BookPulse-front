@@ -6,7 +6,7 @@ import {CollectionDto, GenreStat, GoogleBookDTO, MonthStat, MyBookDto, ReviewDto
     providedIn: 'root',
 })
 export class ApiService {
-    private readonly baseUrl = 'http://localhost:8080/api';
+    private readonly baseUrl = 'https://api-bookpulse.enjine.ru/api';
 
     constructor(private http: HttpClient) {
     }

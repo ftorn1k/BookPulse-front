@@ -9,7 +9,7 @@ type AuthResponse = { token: string; user: MeUser };
 export class AuthService {
     private http = inject(HttpClient);
 
-    private readonly baseUrl = 'http://localhost:8080/api';
+    private readonly baseUrl = 'https://api-bookpulse.enjine.ru/api';
 
     private userSubject = new BehaviorSubject<MeUser | null>(null);
 
@@ -51,7 +51,7 @@ export class AuthService {
             tap((resp) => this.setSession(resp.token, resp.user))
         );
     }
-  
+
     login(email: string, password: string) {
         return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, {email, password}).pipe(
             tap((resp) => this.setSession(resp.token, resp.user))

@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "app": {
+    "bookpulse": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,6 +20,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/bookpulse",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -61,10 +62,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "app:build:production"
+              "buildTarget": "bookpulse:build:production"
             },
             "development": {
-              "buildTarget": "app:build:development"
+              "buildTarget": "bookpulse:build:development"
             }
           },
           "defaultConfiguration": "development"
