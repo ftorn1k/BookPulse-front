@@ -1,17 +1,23 @@
 import { Routes } from '@angular/router';
 import { AppShell } from './shared/layouts/app-shell/app-shell';
+import { Main } from './pages/main/main';
+import { Book } from './pages/book/book';
+import { MyBooks } from './pages/my-books/my-books';
+import { Profile } from './pages/profile/profile';
+import { Reg } from './pages/reg/reg';
+import { Auth } from './pages/auth/auth';
 
 export const routes: Routes = [
-  { path: 'reg', loadComponent: () => import('./pages/reg/reg').then(m => m.Reg) },
-    { path: 'auth', loadComponent: () => import('./pages/auth/auth').then(m => m.Auth) },
+  { path: 'reg', component: Reg },
+  { path: 'auth', component: Auth },
   {
     path: '',
     component: AppShell,
     children: [
-      { path: '', loadComponent: () => import('./pages/main/main').then(m => m.Main) },
-      { path: 'book/:id', loadComponent: () => import('./pages/book/book').then(m => m.Book) },
-      { path: 'my-books', loadComponent: () => import('./pages/my-books/my-books').then(m => m.MyBooks) },
-      { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
+      { path: '', component: Main},
+      { path: 'book/:id', component: Book },
+      { path: 'my-books', component: MyBooks },
+      { path: 'profile', component: Profile },
     ],
   },
 

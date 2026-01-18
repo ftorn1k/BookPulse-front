@@ -1,19 +1,8 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-
-type MyBookDto = {
-  bookId: number;
-  googleId: string;
-  title: string;
-  author: string;
-  coverUrl: string;
-  status: 'planned' | 'reading' | 'finished' | 'dropped';
-  collections: string[];
-};
-
-type MyCollectionDto = { id: number; name: string; count: number };
+import { MyBookDto, CollectionDto } from '../../core/types';
+import { ApiService } from '../../core/api';
 
 @Component({
   selector: 'app-my-books-page',
@@ -21,14 +10,13 @@ type MyCollectionDto = { id: number; name: string; count: number };
   imports: [CommonModule],
   templateUrl: './my-books.html',
 })
-export class MyBooks {
-  private http = inject(HttpClient);
+export class MyBooks implements OnInit{
   private router = inject(Router);
 
   loading = signal(true);
   books = signal<MyBookDto[]>([]);
 
-  collectionsList = signal<MyCollectionDto[]>([]);
+  collectionsList = signal<CollectionDto[]>([]);
 
   selectedCollection = signal<string | null>(null);
   collectionsMenuOpen = signal(false);
@@ -60,7 +48,7 @@ export class MyBooks {
   addToCollectionOpen = signal(false);
   addToCollectionBook = signal<MyBookDto | null>(null);
   addToCollectionError = signal('');
-
+  constructor(private api: ApiService){}
   ngOnInit() {
     this.load();
   }
@@ -75,21 +63,17 @@ export class MyBooks {
   }
 
   load() {
-    const token = this.getTokenOrRedirect();
-    if (!token) return;
-
     this.loading.set(true);
-
-    this.http
-      .get<MyBookDto[]>('/api/me/books', { headers: { Authorization: `Bearer ${token}` } })
-      .subscribe({
+    console.log("loading")
+    this.api.myBooks.subscribe({
         next: (data) => {
           this.books.set(data ?? []);
           this.loading.set(false);
 
           this.loadCollections();
         },
-        error: () => {
+        error: (e) => {
+          console.log(e)
           this.loading.set(false);
           this.router.navigateByUrl('/auto');
         },
@@ -100,9 +84,7 @@ export class MyBooks {
     const token = this.getTokenOrRedirect();
     if (!token) return;
 
-    this.http
-      .get<MyCollectionDto[]>('/api/me/collections', { headers: { Authorization: `Bearer ${token}` } })
-      .subscribe({
+    this.api.myCollections.subscribe({
         next: (cols) => this.collectionsList.set(cols ?? []),
         error: () => this.collectionsList.set([]),
       });
@@ -166,13 +148,7 @@ export class MyBooks {
     this.creatingCollection.set(true);
     this.createError.set('');
 
-    this.http
-      .post(
-        '/api/me/collections',
-        { name, bookIds: ids },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .subscribe({
+    this.api.createCollection(name, ids).subscribe({
         next: () => {
           this.creatingCollection.set(false);
           this.closeCreateCollection();
@@ -202,13 +178,7 @@ export class MyBooks {
     const token = this.getTokenOrRedirect();
     if (!token) return;
 
-    this.http
-      .patch(
-        '/api/me/books/status',
-        { bookId: b.bookId, status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .subscribe({
+    this.api.changeBookStatus(b.bookId, status).subscribe({
         next: () => {
           this.statusMenuBook.set(null);
           this.load();
@@ -246,13 +216,7 @@ export class MyBooks {
 
     this.addToCollectionError.set('');
 
-    this.http
-      .post(
-        '/api/me/collections/add-books',
-        { collectionId, googleIds: [b.googleId] },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .subscribe({
+    this.api.addBookToCollection(collectionId, b.googleId).subscribe({
         next: () => {
           this.closeAddToCollection();
           this.load();

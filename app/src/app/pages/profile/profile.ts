@@ -1,16 +1,15 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService, MeUser } from '../../core/auth/auth.service';
 
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { Chart, registerables } from 'chart.js';
+import { GenreStat, MonthStat } from '../../core/types';
+import { ApiService } from '../../core/api';
+import { firstValueFrom } from 'rxjs';
 Chart.register(...registerables);
-
-type GenreStat = { genre: string; cnt: number };
-type MonthStat = { month: string; cnt: number };
 
 @Component({
   selector: 'app-profile',
@@ -20,7 +19,6 @@ type MonthStat = { month: string; cnt: number };
   styleUrl: './profile.scss',
 })
 export class Profile implements OnInit {
-  private http = inject(HttpClient);
   private router = inject(Router);
   private auth = inject(AuthService);
 
@@ -112,46 +110,31 @@ export class Profile implements OnInit {
   },
 };
 
-
-  initials = computed(() => {
-    const u = this.user();
-    const n = (u?.name || '').trim();
-    if (!n) return 'U';
-    return n.split(/\s+/).slice(0, 2).map(x => x[0]?.toUpperCase()).join('');
-  });
-
-  ngOnInit(): void {
-    this.loadMe();
-    this.loadStats();
+  constructor(private api: ApiService){}
+  async ngOnInit() {
+    await this.loadMe();
+    await this.loadStats();
   }
 
-  private token() {
-    return localStorage.getItem('token');
+  private async loadMe() {
+    const res = await firstValueFrom(this.auth.loadMe())
+    if(!res){
+      this.router.navigateByUrl('/auth');
+    }
+    this.user.set(res);
+    this.name.set(res?.name ?? '');
+    this.email.set(res?.email ?? '');
   }
 
-  private loadMe() {
-    this.auth.loadMe().subscribe({
-      next: (u) => {
-        this.user.set(u);
-        this.name.set(u?.name ?? '');
-        this.email.set(u?.email ?? '');
-      },
-      error: () => {
-        this.router.navigateByUrl('/auth');
-      },
-    });
-  }
-
-  private loadStats() {
-    const token = this.token();
-    if (!token) return;
-
-    this.http.get<{ genres: GenreStat[]; months: MonthStat[] }>('/api/me/stats', {
-      headers: { Authorization: `Bearer ${token}` },
-    }).subscribe({
-      next: (data) => {
-        const genres = data?.genres ?? [];
-        const months = data?.months ?? [];
+  private async loadStats() {
+    const res = await firstValueFrom(this.api.stats)
+    this.genreStats.set([]);
+    this.monthStats.set([]);
+    this.pieData.set({ labels: [], datasets: [{ data: [] }] });
+    this.barData.set({ labels: [], datasets: [{ data: [] }] });
+    if(res){
+       const genres = res.genres ?? [];
+        const months = res.months ?? [];
 
         this.genreStats.set(genres);
         this.monthStats.set(months);
@@ -165,22 +148,10 @@ export class Profile implements OnInit {
           labels: months.map(x => x.month),
           datasets: [{ data: months.map(x => x.cnt) }],
         });
-      },
-      error: () => {
-        this.genreStats.set([]);
-        this.monthStats.set([]);
-        this.pieData.set({ labels: [], datasets: [{ data: [] }] });
-        this.barData.set({ labels: [], datasets: [{ data: [] }] });
-      }
-    });
+    }
   }
 
   save() {
-    const token = this.token();
-    if (!token) {
-      this.router.navigateByUrl('/auth');
-      return;
-    }
 
     this.saveError.set('');
     this.saveOk.set(false);
@@ -188,41 +159,31 @@ export class Profile implements OnInit {
     const name = this.name().trim();
     const pass = this.password().trim();
 
-    const reqs: Array<Promise<any>> = [];
-
     if (name) {
-      reqs.push(
-        this.http.patch('/api/me/profile', { name }, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).toPromise()
-      );
+        this.saving.set(true);
+        this.api.changeName(name).subscribe(()=>{
+          this.saving.set(false);
+          this.saveOk.set(true);
+          this.loadMe(); 
+        }, (e) => {
+          this.saving.set(false);
+        this.saveError.set(e?.error?.message || 'Ошибка сохранения');
+        })
     }
 
     if (pass) {
-      reqs.push(
-        this.http.patch('/api/me/password', { password: pass }, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).toPromise()
-      );
-    }
-
-    if (reqs.length === 0) {
-      this.saveError.set('Нечего сохранять.');
-      return;
-    }
-
-    this.saving.set(true);
-
-    Promise.all(reqs)
-      .then(() => {
-        this.saving.set(false);
-        this.saveOk.set(true);
-        this.password.set('');
-        this.loadMe(); 
-      })
-      .catch((e) => {
-        this.saving.set(false);
+        this.saving.set(true);
+        this.api.changePassword(pass).subscribe(()=>{
+          this.saving.set(false);
+          this.saveOk.set(true);
+          this.password.set('');
+          this.loadMe(); 
+        }, (e) => {
+          this.saving.set(false);
         this.saveError.set(e?.error?.message || 'Ошибка сохранения');
-      });
+        })
+    }
+
+
   }
 }

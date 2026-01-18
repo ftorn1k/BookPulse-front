@@ -2,25 +2,14 @@ import { Component, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@an
 import { CommonModule } from '@angular/common';
 import { BookCard, UiBook } from '../../shared/components/book-card/book-card';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Router,ActivatedRoute } from '@angular/router';
+import { ApiService } from '../../core/api';
+import { GoogleBookDTO } from '../../core/types';
 
 
 type HomeSections = {
   topWeek: UiBook[];
   forYou: UiBook[];
-};
-
-type GoogleBookDTO = {
-  id: string;
-  title: string;
-  author: string;
-  coverUrl: string;
-  description: string;
-  categories: string[] | null;
-  publishedYear: number;
-  pageCount: number;
-  maturity: string;
 };
 
 @Component({
@@ -30,7 +19,6 @@ type GoogleBookDTO = {
   templateUrl: './main.html',
 })
 export class Main {
-  private http = inject(HttpClient);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   
@@ -51,7 +39,7 @@ scrollTopWeek(dir: number) {
   }
   
   private route = inject(ActivatedRoute);
-  constructor() {
+  constructor(private api: ApiService) {
     this.loadTopWeek();
     this.loadForYou();
      this.route.queryParamMap.subscribe((pm) => {
@@ -111,9 +99,7 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
 
   loadTopWeek() {
     this.beginLoad();
-    this.http
-      .get<GoogleBookDTO[]>(`/api/google/search?q=${encodeURIComponent('бестселлеры')}&max=10`)
-      .subscribe({
+    this.api.topWeekBooks.subscribe({
         next: (items) => {
           items.forEach((it) => this.byId.set(it.id, it));
           this.sections.topWeek = this.toUi(items);
@@ -130,9 +116,7 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
 
   loadForYou() {
     this.beginLoad();
-    this.http
-      .get<GoogleBookDTO[]>(`/api/google/search?q=${encodeURIComponent('современная проза')}&max=10`)
-      .subscribe({
+    this.api.forYouBooks.subscribe({
         next: (items) => {
           items.forEach((it) => this.byId.set(it.id, it));
           this.sections.forYou = this.toUi(items);
@@ -150,11 +134,8 @@ chooseStatus(status: 'planned'|'reading'|'finished'|'dropped') {
   onSearch() {
     const q = this.query.trim();
     if (!q) return;
-
     this.beginLoad();
-    this.http
-      .get<GoogleBookDTO[]>(`/api/google/search?q=${encodeURIComponent(q)}&max=20`)
-      .subscribe({
+    this.api.search(q).subscribe({
         next: (items) => {
           items.forEach((it) => this.byId.set(it.id, it));
           this.sections.forYou = this.toUi(items);
@@ -180,47 +161,17 @@ addBookWithStatus(book: UiBook, status: 'planned'|'reading'|'finished'|'dropped'
     this.router.navigateByUrl('/auto');
     return;
   }
-
-  this.http.get<any>(`/api/books/google/${encodeURIComponent(book.id)}`).subscribe({
+  let bookInfo: GoogleBookDTO|null = null
+  this.api.getBookInfo(book.id).subscribe({
     next: (full) => {
-
-      this.http.post(
-        '/api/me/books',
-        {
-
-          googleId: full.id, 
-          title: full.title,
-          author: full.author ?? '',
-          coverUrl: full.coverUrl ?? '',
-          description: full.description ?? '',
-          categories: full.categories ?? [],
-          publishedYear: full.publishedYear ?? 0,
-          pageCount: full.pageCount ?? 0,
-          maturity: full.maturity ?? 'NOT_MATURE',
-          status,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      ).subscribe({
-        next: (resp) => {
-          console.log('✅ added', resp);
-
-        },
-        error: (e) => {
-          console.error('❌ add error', e);
-          alert(
-            (typeof e?.error === 'string' && e.error) ||
-            e?.error?.message ||
-            `Ошибка добавления (${e.status})`
-          );
-        },
-      });
+      bookInfo = full
     },
     error: (e) => {
-      console.error('❌ details error', e);
+      console.error('details error', e);
       alert('Не удалось получить детали книги');
     },
   });
+  if(bookInfo)
+    this.api.addBook(bookInfo, status)
 }
 }

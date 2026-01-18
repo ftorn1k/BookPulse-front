@@ -48,7 +48,7 @@ onSearch() {
 
   onAvatarClick() {
     if (!this.isAuthed) {
-      this.router.navigateByUrl('/auth');
+      this.router.navigate(['/auth']);
       return;
     }
     this.menuOpen.set(!this.menuOpen());
@@ -56,23 +56,23 @@ onSearch() {
 
   onMyBooksClick() {
     if (!this.isAuthed) {
-      this.router.navigateByUrl('/auth');
+      this.router.navigate(['/auth']);
       return;
     }
     this.menuOpen.set(false);
-    this.router.navigateByUrl('/my-books');
+    this.router.navigate(['/my-books']);
   }
 
   logout() {
     this.auth.logout();
     this.user.set(null);
     this.menuOpen.set(false);
-    this.router.navigateByUrl('/auth');
+    this.router.navigate(['/auth']);
   }
 
   go(path: string) {
     this.menuOpen.set(false);
-    this.router.navigateByUrl(path);
+    this.router.navigate([path]);
   }
 
   @HostListener('document:click', ['$event'])
